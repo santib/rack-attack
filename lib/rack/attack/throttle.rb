@@ -22,21 +22,22 @@ module Rack
         Rack::Attack.cache
       end
 
-      def matched_by?(request, use_offset = false)
+      def matched_by?(request)
         discriminator = discriminator_for(request)
         return false unless discriminator
 
         current_period  = period_for(request)
         current_limit   = limit_for(request)
-        count           = cache.count("#{name}:#{discriminator}", current_period, use_offset)
+        offset          = offset_for(discriminator, current_period)
+        count           = cache.count("#{name}:#{discriminator}", current_period, offset)
 
         data = {
           discriminator: discriminator,
           count: count,
           period: current_period,
+          offset: offset,
           limit: current_limit,
-          epoch_time: cache.last_epoch_time,
-          retry_after: cache.last_retry_after_time
+          epoch_time: cache.last_epoch_time
         }
 
         (count > current_limit).tap do |throttled|
@@ -64,6 +65,12 @@ module Rack
 
       def limit_for(request)
         limit.respond_to?(:call) ? limit.call(request) : limit
+      end
+
+      def offset_for(discriminator, period)
+        return 0 unless Rack::Attack.configuration.throttled_responder_is_offset_aware
+
+        Digest::MD5.hexdigest(discriminator).hex % period
       end
 
       def annotate_request_with_throttle_data(request, data)

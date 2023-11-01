@@ -25,7 +25,6 @@ describe "Customizing throttled response" do
     end
 
     get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
-    get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
 
     assert_equal 503, last_response.status
     assert_equal "Throttled", last_response.body
@@ -75,7 +74,6 @@ describe "Customizing throttled response" do
       end
     end
 
-    get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
     get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
 
     assert_equal 503, last_response.status

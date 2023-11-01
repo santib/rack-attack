@@ -7,7 +7,6 @@ module Rack
     class Cache
       attr_accessor :prefix
       attr_reader :last_epoch_time
-      attr_reader :last_retry_after_time
 
       def initialize
         self.store = ::Rails.cache if defined?(::Rails.cache)
@@ -25,8 +24,8 @@ module Rack
           end
       end
 
-      def count(unprefixed_key, period, use_offset = false)
-        key, expires_in = key_and_expiry(unprefixed_key, period, use_offset)
+      def count(unprefixed_key, period, offset = 0)
+        key, expires_in = key_and_expiry(unprefixed_key, period, offset)
         do_count(key, expires_in)
       end
 
@@ -63,23 +62,14 @@ module Rack
 
       private
 
-      def key_and_expiry(unprefixed_key, period, use_offset = false)
+      def key_and_expiry(unprefixed_key, period, offset = 0)
         @last_epoch_time = Time.now.to_i
-        offset = offset_for(unprefixed_key, period, use_offset)
-        period_number, time_into_period = period_number_and_time_into(period, offset)
-        period_remainder = period - time_into_period
-        @last_retry_after_time = @last_epoch_time + period_remainder
+        time_with_offset = @last_epoch_time + offset
+        period_number = (time_with_offset / period).to_i
+        time_into_period = time_with_offset % period
         # Add 1 to expires_in to avoid timing error: https://github.com/rack/rack-attack/pull/85
-        expires_in = period_remainder + 1
+        expires_in = period - time_into_period + 1
         ["#{prefix}:#{period_number}:#{unprefixed_key}", expires_in]
-      end
-
-      def offset_for(unprefixed_key, period, use_offset)
-        use_offset ? Digest::MD5.hexdigest(unprefixed_key).hex % period : 0
-      end
-
-      def period_number_and_time_into(period, offset)
-        [((@last_epoch_time + offset) / period).to_i, (@last_epoch_time + offset) % period]
       end
 
       def do_count(key, expires_in)

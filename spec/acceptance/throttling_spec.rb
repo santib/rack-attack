@@ -36,6 +36,7 @@ describe "#throttle" do
 
   it "returns correct Retry-After header if enabled" do
     Rack::Attack.throttled_response_retry_after_header = true
+    Rack::Attack.configuration.throttled_responder_is_offset_aware = true
 
     Rack::Attack.throttle("by ip", limit: 1, period: 60) do |request|
       request.ip
@@ -49,10 +50,10 @@ describe "#throttle" do
     Timecop.freeze(Time.at(25)) do
       get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
       assert_equal 429, last_response.status
-      assert_equal "19", last_response.headers["Retry-After"]
+      assert_equal "6", last_response.headers["Retry-After"]
     end
 
-    Timecop.freeze(Time.at(42)) do
+    Timecop.freeze(Time.at(29)) do
       get "/", {}, "REMOTE_ADDR" => "1.2.3.4"
       assert_equal 429, last_response.status
       assert_equal "2", last_response.headers["Retry-After"]

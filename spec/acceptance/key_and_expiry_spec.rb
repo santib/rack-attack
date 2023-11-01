@@ -10,35 +10,26 @@ describe "Behavior of key_and_expiry" do
     time = Time.at(1_000_000_000)
 
     Timecop.freeze(time) do
-      key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, false)
+      key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period)
       assert_equal "rack::attack:1000000:abc789", key
       assert_equal 1001, expiry
     end
   end
 
   it "forms keys and expirations with offset as expected" do
+    Rack::Attack.configuration.throttled_responder_is_offset_aware = true
     unprefixed_key = "abc789"
     period = 1000
     time = Time.at(1_000_000_000)
 
     Timecop.freeze(time) do
-      Rack::Attack.cache.stub :offset_for, 0 do
-        key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, true)
-        assert_equal "rack::attack:1000000:abc789", key
-        assert_equal 1001, expiry
-      end
+      key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, 0)
+      assert_equal "rack::attack:1000000:abc789", key
+      assert_equal 1001, expiry
 
-      Rack::Attack.cache.stub :offset_for, 123 do
-        key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, true)
-        assert_equal "rack::attack:1000000:abc789", key
-        assert_equal 1001 - 123, expiry
-      end
-
-      Digest::MD5.stub :hexdigest, "123" do
-        key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, true)
-        assert_equal "rack::attack:1000000:abc789", key
-        assert_equal 1001 - "123".hex, expiry
-      end
+      key, expiry = Rack::Attack.cache.send(:key_and_expiry, unprefixed_key, period, 123)
+      assert_equal "rack::attack:1000000:abc789", key
+      assert_equal 1001 - 123, expiry
     end
   end
 

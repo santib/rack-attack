@@ -355,7 +355,7 @@ Rack::Attack.throttled_responder = lambda do |request|
   headers = {
     'RateLimit-Limit' => match_data[:limit].to_s,
     'RateLimit-Remaining' => '0',
-    'RateLimit-Reset' => (match_data[:retry_after] - now).to_s
+    'RateLimit-Reset' => (now + (match_data[:period] - now + match_data[:offset] % match_data[:period])).to_s
   }
 
   [ 429, headers, ["Throttled\n"]]
@@ -363,10 +363,10 @@ end
 Rack::Attack.configuration.throttled_responder_is_offset_aware = true
 ```
 
-For responses that exceeded a throttle limit, Rack::Attack annotates the env with match data:
+Rack::Attack annotates the env of responses with throttle data:
 
 ```ruby
-request.env['rack.attack.throttle_data'][name] # => { discriminator: d, count: n, period: p, limit: l, epoch_time: t, retry_after: r }
+request.env['rack.attack.throttle_data'][name] # => { discriminator: d, count: n, period: p, offset: o, limit: l, epoch_time: t }
 ```
 
 ## Logging & Instrumentation

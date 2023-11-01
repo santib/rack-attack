@@ -10,7 +10,8 @@ module Rack
       DEFAULT_THROTTLED_RESPONDER = lambda do |req|
         if Rack::Attack.configuration.throttled_response_retry_after_header
           match_data = req.env['rack.attack.match_data']
-          retry_after = match_data[:retry_after] - match_data[:epoch_time]
+          now = match_data[:epoch_time]
+          retry_after = match_data[:period] - ((now + match_data[:offset]) % match_data[:period])
 
           [429, { 'content-type' => 'text/plain', 'retry-after' => retry_after.to_s }, ["Retry later\n"]]
         else
@@ -87,10 +88,8 @@ module Rack
       end
 
       def throttled?(request)
-        use_offset = throttled_responder_is_offset_aware ||
-                     (!throttled_response && throttled_responder == DEFAULT_THROTTLED_RESPONDER)
         @throttles.any? do |_name, throttle|
-          throttle.matched_by?(request, use_offset)
+          throttle.matched_by?(request)
         end
       end
 
