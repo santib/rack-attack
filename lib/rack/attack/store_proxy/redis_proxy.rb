@@ -61,7 +61,7 @@ module Rack
         def rescuing
           yield
         rescue Redis::BaseConnectionError
-          nil
+          raise Rack::Attack::CacheError
         end
       end
     end

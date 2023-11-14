@@ -70,7 +70,7 @@ module Rack
         def rescuing
           yield
         rescue Dalli::DalliError
-          nil
+          raise Rack::Attack::CacheError
         end
       end
     end

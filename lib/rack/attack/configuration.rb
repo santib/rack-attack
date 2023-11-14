@@ -19,8 +19,11 @@ module Rack
         end
       end
 
+      DEFAULT_CACHE_ERROR_HANDLER = lambda { |_e| }
+
       attr_reader :safelists, :blocklists, :throttles, :anonymous_blocklists, :anonymous_safelists
-      attr_accessor :blocklisted_responder, :throttled_responder, :throttled_response_retry_after_header
+      attr_accessor :blocklisted_responder, :throttled_responder, :throttled_response_retry_after_header,
+                    :cache_error_handler
 
       attr_reader :blocklisted_response, :throttled_response # Keeping these for backwards compatibility
 
@@ -119,6 +122,7 @@ module Rack
 
         @blocklisted_responder = DEFAULT_BLOCKLISTED_RESPONDER
         @throttled_responder = DEFAULT_THROTTLED_RESPONDER
+        @cache_error_handler = DEFAULT_CACHE_ERROR_HANDLER
 
         # Deprecated: Keeping these for backwards compatibility
         @blocklisted_response = nil
