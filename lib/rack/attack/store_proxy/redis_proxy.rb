@@ -60,8 +60,8 @@ module Rack
 
         def rescuing
           yield
-        rescue Redis::BaseConnectionError
-          raise Rack::Attack::CacheError
+        rescue Redis::BaseConnectionError => e
+          raise Rack::Attack::CacheError.new(e)
         end
       end
     end

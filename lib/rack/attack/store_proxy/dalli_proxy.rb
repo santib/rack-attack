@@ -69,8 +69,8 @@ module Rack
 
         def rescuing
           yield
-        rescue Dalli::DalliError
-          raise Rack::Attack::CacheError
+        rescue Dalli::DalliError => e
+          raise Rack::Attack::CacheError.new(e)
         end
       end
     end

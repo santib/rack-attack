@@ -24,7 +24,13 @@ module Rack
 
     class IncompatibleStoreError < Error; end
 
-    class CacheError < Error; end
+    class CacheError < Error
+      attr_reader :original_error
+
+      def initialize(original_error)
+        @original_error = original_error
+      end
+    end
 
     autoload :Check,                'rack/attack/check'
     autoload :Throttle,             'rack/attack/throttle'
@@ -84,8 +90,7 @@ module Rack
         :safelists,
         :blocklists,
         :throttles,
-        :tracks,
-        :cache_error_handler,
+        :tracks
       )
     end
 
@@ -132,7 +137,6 @@ module Rack
         @app.call(env)
       end
     rescue Rack::Attack::CacheError => e
-      configuration.cache_error_handler.call(e)
       @app.call(env)
     end
   end
