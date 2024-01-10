@@ -27,6 +27,7 @@ if defined?(Rails::Application)
 
       get "/", {}, "REMOTE_ADDR" => "4.3.2.1"
       assert_equal 200, last_response.status
+      raise 'it runs'
     end
   end
 end
