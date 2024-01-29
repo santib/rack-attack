@@ -19,13 +19,13 @@ module Rack
 
         def reset(discriminator, options)
           findtime = options[:findtime] or raise ArgumentError, "Must pass findtime option"
-          cache.reset_count("#{key_prefix}:count:#{discriminator}", findtime)
+          cache.reset_count(count_key_generator(discriminator, findtime).key)
           # Clear ban flag just in case it's there
-          cache.delete("#{key_prefix}:ban:#{discriminator}")
+          cache.delete(ban_key_generator(discriminator).key)
         end
 
         def banned?(discriminator)
-          cache.read("#{key_prefix}:ban:#{discriminator}") ? true : false
+          cache.read(ban_key_generator(discriminator).key) ? true : false
         end
 
         protected
@@ -35,7 +35,8 @@ module Rack
         end
 
         def fail!(discriminator, bantime, findtime, maxretry)
-          count = cache.count("#{key_prefix}:count:#{discriminator}", findtime)
+          key_generator = count_key_generator(discriminator, findtime)
+          count = cache.count(key_generator.key, key_generator.expires_in)
           if count >= maxretry
             ban!(discriminator, bantime)
           end
@@ -46,11 +47,19 @@ module Rack
         private
 
         def ban!(discriminator, bantime)
-          cache.write("#{key_prefix}:ban:#{discriminator}", 1, bantime)
+          cache.write(ban_key_generator(discriminator).key, 1, bantime)
         end
 
         def cache
           Rack::Attack.cache
+        end
+
+        def count_key_generator(discriminator, findtime)
+          Rack::Attack::Cache::ExpirableKeyGenerator.new("#{key_prefix}:count", discriminator, findtime)
+        end
+
+        def ban_key_generator(discriminator)
+          Rack::Attack::Cache::KeyGenerator.new("#{key_prefix}:ban", discriminator)
         end
       end
     end

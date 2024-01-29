@@ -13,7 +13,8 @@ module Rack
         # everything is the same here except we only return true
         # (blocking the request) if they have tripped the limit.
         def fail!(discriminator, bantime, findtime, maxretry)
-          count = cache.count("#{key_prefix}:count:#{discriminator}", findtime)
+          key_generator = count_key_generator(discriminator, findtime)
+          count = cache.count(key_generator.key, key_generator.expires_in)
           if count >= maxretry
             ban!(discriminator, bantime)
           end

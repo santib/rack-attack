@@ -116,12 +116,12 @@ describe 'Rack::Attack' do
       it 'should delete rack attack keys' do
         redis = Redis.new
         redis.set('key', 'value')
-        redis.set("#{Rack::Attack.cache.prefix}::key", 'value')
+        redis.set("#{Rack::Attack::Cache::KeyGenerator::PREFIX}::key", 'value')
         Rack::Attack.cache.store = redis
         Rack::Attack.reset!
 
         _(redis.get('key')).must_equal 'value'
-        _(redis.get("#{Rack::Attack.cache.prefix}::key")).must_be_nil
+        _(redis.get("#{Rack::Attack::Cache::KeyGenerator::PREFIX}::key")).must_be_nil
       end
     end
   end

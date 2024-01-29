@@ -3,6 +3,8 @@
 require 'rack'
 require 'forwardable'
 require 'rack/attack/cache'
+require 'rack/attack/cache/key_generator'
+require 'rack/attack/cache/expirable_key_generator'
 require 'rack/attack/configuration'
 require 'rack/attack/path_normalizer'
 require 'rack/attack/request'
