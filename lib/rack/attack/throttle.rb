@@ -29,7 +29,7 @@ module Rack
         current_period  = period_for(request)
         current_limit   = limit_for(request)
         key_generator   = Rack::Attack::Cache::ExpirableKeyGenerator.new(name, discriminator, current_period)
-        count = cache.count(key_generator.key, key_generator.expires_in)
+        count           = cache.count(key_generator.key, key_generator.expires_in)
 
         data = {
           discriminator: discriminator,
